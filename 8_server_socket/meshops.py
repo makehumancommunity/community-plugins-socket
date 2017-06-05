@@ -8,6 +8,9 @@ import json
 from sys import exc_info 
 import traceback
 import sys
+import os
+
+from core import G
 
 class SocketMeshOps():
 
@@ -49,7 +52,18 @@ class SocketMeshOps():
         jsonCall.data = self.human.mesh.coord
 
     def getPose(self,conn,jsonCall):
+
+        mhapi = G.app.mhapi
         
+        poseFilename = jsonCall.params["poseFilename"]
+
+        if poseFilename is not None:
+            filename, file_extension = os.path.splitext(poseFilename)
+            if file_extension == ".mhpose":
+                mhapi.skeleton.setExpressionFromFile(poseFilename)
+            if file_extension == ".bvh":
+                mhapi.skeleton.setPoseFromFile(poseFilename)
+
         self.parent.addMessage("Constructing dict with bone matrices.")
         
         skeleton = self.human.getSkeleton()
