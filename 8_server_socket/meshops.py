@@ -54,9 +54,9 @@ class SocketMeshOps():
     def getPose(self,conn,jsonCall):
 
         mhapi = G.app.mhapi
-        
-        poseFilename = jsonCall.params["poseFilename"]
 
+        poseFilename = jsonCall.params.get("poseFilename") # use get, since might not be there
+        
         if poseFilename is not None:
             filename, file_extension = os.path.splitext(poseFilename)
             if file_extension == ".mhpose":
