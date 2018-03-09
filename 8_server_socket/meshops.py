@@ -38,13 +38,13 @@ class SocketMeshOps():
                 self.parent.addMessage("Did not understand '" + function + "'")
                 jsoncall.setError('"' + function + '" is not valid command')
         except:
-            print "Exception in JSON:"
-            print '-'*60
+            print("Exception in JSON:")
+            print('-'*60)
             traceback.print_exc(file=sys.stdout)
-            print '-'*60
+            print('-'*60)
             ex = exc_info()
             jsoncall.setError("runtime exception:  " + str(ex[1]))
-            print ex
+            print(ex)
 
         return jsoncall
 
@@ -75,7 +75,7 @@ class SocketMeshOps():
             rmat = bone.getRestMatrix('zUpFaceNegY')
             skelobj[bone.name] = [ list(rmat[0,:]), list(rmat[1,:]), list(rmat[2,:]), list(rmat[3,:]) ]
 
-        print skelobj
+        print(skelobj)
 
         jsonCall.data = skelobj
 

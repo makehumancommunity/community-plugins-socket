@@ -29,12 +29,14 @@ import log
 import socket
 import json
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from core import G
+mhapi = G.app.mhapi
 
-from dirops import SocketDirOps
-from meshops import SocketMeshOps
-from modops import SocketModifierOps
+QThread = mhapi.ui.QtCore.QThread
+
+from .dirops import SocketDirOps
+from .meshops import SocketMeshOps
+from .modops import SocketModifierOps
 
 class WorkerThread(QThread):
 
@@ -45,7 +47,7 @@ class WorkerThread(QThread):
 
     def addMessage(self,message,newLine = True):
         self.emit(SIGNAL("addMessage(QString)"),QString(message))
-        print message
+        print(message)
         pass
 
     def run(self):
@@ -55,7 +57,7 @@ class WorkerThread(QThread):
         try:
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.socket.bind(('127.0.0.1', 12345))
-        except socket.error , msg:
+        except socket.error as msg:
             self.addMessage('Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1] + "\n")
             return;
 

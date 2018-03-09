@@ -29,13 +29,10 @@ import log
 import socket
 import json
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-
-from dirops import SocketDirOps
-from meshops import SocketMeshOps
-from modops import SocketModifierOps
-from workerthread import WorkerThread
+from .dirops import SocketDirOps
+from .meshops import SocketMeshOps
+from .modops import SocketModifierOps
+from .workerthread import WorkerThread
 
 class SocketTaskView(gui3d.TaskView):
 
@@ -88,7 +85,7 @@ class SocketTaskView(gui3d.TaskView):
         self.addMessage("About to serialize JSON. This might take some time.")
         response = jsonCall.serialize()
 
-        print "About to send:\n\n" + response
+        print("About to send:\n\n" + response)
         conn.send(response)
         conn.close()
  

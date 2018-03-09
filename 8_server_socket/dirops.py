@@ -34,13 +34,13 @@ class SocketDirOps():
                 self.parent.addMessage("Did not understand '" + function + "'")
                 jsoncall.setError('"' + function + '" is not valid command')
         except:
-            print "Exception in JSON:"
-            print '-'*60
+            print("Exception in JSON:")
+            print('-'*60)
             traceback.print_exc(file=sys.stdout)
-            print '-'*60
+            print('-'*60)
             ex = exc_info()
             jsoncall.setError("runtime exception:  " + str(ex[1]))
-            print ex
+            print(ex)
 
         return jsoncall
 
