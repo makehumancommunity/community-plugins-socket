@@ -25,12 +25,40 @@ does not make much sense without a corresponding client.
 import gui3d
 import mh
 import gui
-import log
 import socket
 import json
 
 from core import G
-mhapi = G.app.mhapi
+
+mhapi = gui3d.app.mhapi
+
+qtSignal = None
+qtSlot = None
+
+if mhapi.utility.isPython3():
+    from PyQt5 import QtGui
+    from PyQt5 import QtCore
+    from PyQt5.QtGui import *
+    from PyQt5 import QtWidgets
+    from PyQt5.QtWidgets import *
+    from PyQt5.QtCore import *
+    qtSignal = QtCore.pyqtSignal
+    qtSlot = QtCore.pyqtSlot
+else:
+    if mhapi.utility.isPySideAvailable():
+        from PySide import QtGui
+        from PySide import QtCore
+        from PySide.QtGui import *
+        from PySide.QtCore import *
+        qtSignal = QtCore.Signal
+        qtSlot = QtCore.Slot
+    else:
+        from PyQt4 import QtGui
+        from PyQt4 import QtCore
+        from PyQt4.QtGui import *
+        from PyQt4.QtCore import *
+        qtSignal = QtCore.pyqtSignal
+        qtSlot = QtCore.pyqtSlotmhapi = G.app.mhapi
 
 QThread = mhapi.ui.QtCore.QThread
 
@@ -40,13 +68,16 @@ from .modops import SocketModifierOps
 
 class WorkerThread(QThread):
 
+    signalAddMessage = qtSignal(str)
+    signalEvaluateCall = qtSignal()
+
     def __init__(self, parent = None):
         QThread.__init__(self, parent)
         self.exiting = False
-        #self.taskview = taskview
+        self.log = mhapi.utility.getLogChannel("socket")
 
     def addMessage(self,message,newLine = True):
-        self.emit(SIGNAL("addMessage(QString)"),QString(message))
+        self.signalAddMessage.emit(message)
         print(message)
         pass
 
@@ -80,7 +111,7 @@ class WorkerThread(QThread):
                     self.jsonCall = data
                     self.currentConnection = conn
     
-                    self.emit(SIGNAL("evaluateCall()"))
+                    self.signalEvaluateCall.emit()
             except socket.error:
                 """Assume this is because we closed the socket from outside"""
                 pass
@@ -99,5 +130,6 @@ class WorkerThread(QThread):
 
     def __del__(self):        
         self.stopListening()
+
 
 

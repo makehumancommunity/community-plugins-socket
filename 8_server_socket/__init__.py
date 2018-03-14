@@ -25,9 +25,10 @@ does not make much sense without a corresponding client.
 import gui3d
 import mh
 import gui
-import log
 import socket
 import json
+
+mhapi = gui3d.app.mhapi
 
 from .dirops import SocketDirOps
 from .meshops import SocketMeshOps
@@ -39,6 +40,8 @@ class SocketTaskView(gui3d.TaskView):
     def __init__(self, category):
         self.human = gui3d.app.selectedHuman
         gui3d.TaskView.__init__(self, category, 'Socket')
+
+        self.log = mhapi.utility.getLogChannel("socket")
 
         box = self.addLeftWidget(gui.GroupBox('Server'))
         
@@ -90,6 +93,7 @@ class SocketTaskView(gui3d.TaskView):
         conn.close()
  
     def addMessage(self,message,newLine = True):
+        self.log.debug("addMessage: ", message)
         if newLine:
             message = message + "\n";
         self.scriptText.addText(message)
@@ -97,10 +101,9 @@ class SocketTaskView(gui3d.TaskView):
     def openSocket(self):
         self.addMessage("Starting server thread.")
         self.workerthread = WorkerThread()
-        self.scriptText.connect(self.workerthread,SIGNAL("evaluateCall()"),self.evaluateCall)
-        self.scriptText.connect(self.workerthread,SIGNAL("addMessage(QString)"),self.threadMessage)
+        self.workerthread.signalEvaluateCall.connect(self.evaluateCall)
+        self.workerthread.signalAddMessage.connect(self.threadMessage)
         self.workerthread.start()
-        #start_new_thread(self.serverThread,(None,))
 
     def closeSocket(self):
         #self.addMessage("Closing socket.")
