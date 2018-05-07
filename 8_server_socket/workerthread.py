@@ -66,6 +66,11 @@ from .dirops import SocketDirOps
 from .meshops import SocketMeshOps
 from .modops import SocketModifierOps
 
+try:
+    unicode()
+except NameError:
+    unicode = str
+
 class WorkerThread(QThread):
 
     signalAddMessage = qtSignal(str)
@@ -105,7 +110,7 @@ class WorkerThread(QThread):
                 if conn and not self.exiting:
                     self.addMessage("Connected with " + addr[0] + ":" + str(addr[1]))
                     data = conn.recv(8192)
-                    self.addMessage("Client says: '" + data + "'")
+                    self.addMessage("Client says: '" + unicode(data, encoding='utf-8') + "'")
                     data = gui3d.app.mhapi.internals.JsonCall(data)
     
                     self.jsonCall = data
