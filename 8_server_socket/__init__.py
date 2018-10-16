@@ -27,8 +27,10 @@ import mh
 import gui
 import socket
 import json
+import sys
 
 mhapi = gui3d.app.mhapi
+pyhton3 = sys.version_info >= (3, 0)
 
 from .dirops import SocketDirOps
 from .meshops import SocketMeshOps
@@ -89,6 +91,8 @@ class SocketTaskView(gui3d.TaskView):
         response = jsonCall.serialize()
 
         print("About to send:\n\n" + response)
+        if pyhton3 and isinstance(response, str):
+            response = bytes(response, encoding='utf-8')
         conn.send(response)
         conn.close()
  
