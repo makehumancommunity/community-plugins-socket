@@ -32,44 +32,20 @@ from core import G
 
 mhapi = gui3d.app.mhapi
 
-qtSignal = None
-qtSlot = None
-
-if mhapi.utility.isPython3():
-    from PyQt5 import QtGui
-    from PyQt5 import QtCore
-    from PyQt5.QtGui import *
-    from PyQt5 import QtWidgets
-    from PyQt5.QtWidgets import *
-    from PyQt5.QtCore import *
-    qtSignal = QtCore.pyqtSignal
-    qtSlot = QtCore.pyqtSlot
-else:
-    if mhapi.utility.isPySideAvailable():
-        from PySide import QtGui
-        from PySide import QtCore
-        from PySide.QtGui import *
-        from PySide.QtCore import *
-        qtSignal = QtCore.Signal
-        qtSlot = QtCore.Slot
-    else:
-        from PyQt4 import QtGui
-        from PyQt4 import QtCore
-        from PyQt4.QtGui import *
-        from PyQt4.QtCore import *
-        qtSignal = QtCore.pyqtSignal
-        qtSlot = QtCore.pyqtSlotmhapi = G.app.mhapi
+from PyQt5 import QtGui
+from PyQt5 import QtCore
+from PyQt5.QtGui import *
+from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+qtSignal = QtCore.pyqtSignal
+qtSlot = QtCore.pyqtSlot
 
 QThread = mhapi.ui.QtCore.QThread
 
 from .dirops import SocketDirOps
 from .meshops import SocketMeshOps
 from .modops import SocketModifierOps
-
-try:
-    unicode()
-except NameError:
-    unicode = str
 
 class WorkerThread(QThread):
 
@@ -83,7 +59,6 @@ class WorkerThread(QThread):
 
     def addMessage(self,message,newLine = True):
         self.signalAddMessage.emit(message)
-        print(message)
         pass
 
     def run(self):
@@ -108,9 +83,9 @@ class WorkerThread(QThread):
                 conn, addr = self.socket.accept()
     
                 if conn and not self.exiting:
-                    self.addMessage("Connected with " + addr[0] + ":" + str(addr[1]))
+                    self.addMessage("Connected with " + str(addr[0]) + ":" + str(addr[1]))
                     data = conn.recv(8192)
-                    self.addMessage("Client says: '" + unicode(data, encoding='utf-8') + "'")
+                    self.addMessage("Client says: '" + str(data, encoding='utf-8') + "'")
                     data = gui3d.app.mhapi.internals.JsonCall(data)
     
                     self.jsonCall = data

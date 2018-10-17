@@ -10,7 +10,7 @@
 
 **Authors:**           Joel Palmius
 
-**Copyright(c):**      Joel Palmius 2016
+**Copyright(c):**      Joel Palmius 2018
 
 **Licensing:**         MIT
 
@@ -30,16 +30,18 @@ import json
 import sys
 
 mhapi = gui3d.app.mhapi
-pyhton3 = sys.version_info >= (3, 0)
+isPy3 = mhapi.utility.isPy3
 
-from .dirops import SocketDirOps
-from .meshops import SocketMeshOps
-from .modops import SocketModifierOps
-from .workerthread import WorkerThread
+if isPy3:
+    from .dirops import SocketDirOps
+    from .meshops import SocketMeshOps
+    from .modops import SocketModifierOps
+    from .workerthread import WorkerThread
 
 class SocketTaskView(gui3d.TaskView):
 
     def __init__(self, category):
+
         self.human = gui3d.app.selectedHuman
         gui3d.TaskView.__init__(self, category, 'Socket')
 
@@ -51,18 +53,23 @@ class SocketTaskView(gui3d.TaskView):
 
         @self.aToggleButton.mhEvent
         def onClicked(event):
-            if self.aToggleButton.selected:
-                self.openSocket()
-            else:
-                self.closeSocket()
+            if isPy3:
+                if self.aToggleButton.selected:
+                    self.openSocket()
+                else:
+                    self.closeSocket()
 
         self.scriptText = self.addTopWidget(gui.DocumentEdit())
-        self.scriptText.setText('');
+        if isPy3:
+            self.scriptText.setText('')
+        else:
+            self.scriptText.setText('This version of the socket plugin requires the py3 version of MH from github.')
         self.scriptText.setLineWrapMode(gui.DocumentEdit.NoWrap)
 
-        self.dirops = SocketDirOps(self)
-        self.meshops = SocketMeshOps(self)
-        self.modops = SocketModifierOps(self)        
+        if isPy3:
+            self.dirops = SocketDirOps(self)
+            self.meshops = SocketMeshOps(self)
+            self.modops = SocketModifierOps(self)
 
     def threadMessage(self,message):
         self.addMessage(str(message))
@@ -88,18 +95,22 @@ class SocketTaskView(gui3d.TaskView):
             jsonCall.error = "Unknown command"
 
         self.addMessage("About to serialize JSON. This might take some time.")
-        response = jsonCall.serialize()
 
-        print("About to send:\n\n" + response)
-        if pyhton3 and isinstance(response, str):
+        if not jsonCall.responseIsBinary:
+            response = jsonCall.serialize()
+            print("About to send:\n\n" + response)
             response = bytes(response, encoding='utf-8')
+        else:
+            response = jsonCall.data
+            print("About to send binary response with length " + str(len(response)))
+
         conn.send(response)
         conn.close()
  
     def addMessage(self,message,newLine = True):
         self.log.debug("addMessage: ", message)
         if newLine:
-            message = message + "\n";
+            message = message + "\n"
         self.scriptText.addText(message)
         
     def openSocket(self):
@@ -112,7 +123,7 @@ class SocketTaskView(gui3d.TaskView):
     def closeSocket(self):
         #self.addMessage("Closing socket.")
         if not self.workerthread is None:
-            self.workerthread.stopListening();
+            self.workerthread.stopListening()
         self.workerthread = None
 
 category = None
