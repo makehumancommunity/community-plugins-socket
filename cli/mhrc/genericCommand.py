@@ -4,8 +4,8 @@ import sys
 from mhrc.JsonCall import JsonCall
 
 def usage():
-    print "USAGE:\n"
-    print "  genericCommand.py <command> [parameter name] [parameter value]\n";
+    print("USAGE:\n")
+    print("  genericCommand.py <command> [parameter name] [parameter value]\n")
     sys.exit(1)
 
 if len(sys.argv) < 2:
@@ -33,13 +33,13 @@ if argname:
 response = jsc.send()
 
 if not response:
-    print "Command failed (returned null response)\n"
+    print("Command failed (returned null response)\n")
     sys.exit(1)
 
 if hasattr(response,"error") and getattr(response,"error"):
-    print "ERROR: " + getattr(response,"error")
+    print("ERROR: " + getattr(response,"error"))
     sys.exit(1)
 
-print response.getData()
+print(response.getData())
 
 

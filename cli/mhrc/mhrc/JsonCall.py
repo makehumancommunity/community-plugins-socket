@@ -79,7 +79,7 @@ class JsonCall():
 
     def _guessValueType(self,val):
 
-        if isinstance(val,basestring):
+        if isinstance(val,bytes):
             return "string"
 
         if isinstance(val,str):
@@ -209,7 +209,7 @@ class JsonCall():
     def send(self, host = "127.0.0.1", port = 12345):
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect(('127.0.0.1', 12345))
-        client.send(self.serialize())
+        client.send(bytes(self.serialize(), 'utf-8'))
      
         data = ""
     
