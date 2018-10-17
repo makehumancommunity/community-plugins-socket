@@ -9,12 +9,24 @@ class SocketMeshOps(AbstractOp):
 
     def __init__(self, sockettaskview):
         super().__init__(sockettaskview)
+        self.functions["getBodyFacesBinary"] = self.getBodyFacesBinary
         self.functions["getBodyMeshInfo"] = self.getBodyMeshInfo
+        self.functions["getBodyVerticesBinary"] = self.getBodyVerticesBinary
         self.functions["getCoord"] = self.getCoord
         self.functions["getPose"] = self.getPose
 
     def getCoord(self,conn,jsonCall):
         jsonCall.data = self.human.mesh.coord
+
+    def getBodyVerticesBinary(self,conn,jsonCall):
+        jsonCall.responseIsBinary = True
+        coord = self.human.mesh.coord
+        jsonCall.data = coord.tobytes()
+
+    def getBodyFacesBinary(self,conn,jsonCall):
+        jsonCall.responseIsBinary = True
+        faces = self.human.mesh.fvert
+        jsonCall.data = faces.tobytes()
 
     def getBodyMeshInfo(self,conn,jsonCall):
         jsonCall.data = {}
