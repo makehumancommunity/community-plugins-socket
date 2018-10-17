@@ -5,11 +5,15 @@ from sys import exc_info
 import traceback
 import sys
 
+from core import G
+
 class AbstractOp():
 
     def __init__(self, sockettaskview):
         self.parent = sockettaskview
         self.functions = dict()
+        self.human = sockettaskview.human
+        self.api = G.app.mhapi
 
     def hasOp(self,function):
         return function in self.functions.keys()

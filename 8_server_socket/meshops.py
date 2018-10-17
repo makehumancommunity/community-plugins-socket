@@ -3,14 +3,12 @@
 
 import os
 
-from core import G
 from .abstractop import AbstractOp
 
 class SocketMeshOps(AbstractOp):
 
     def __init__(self, sockettaskview):
         super().__init__(sockettaskview)
-        self.human = sockettaskview.human
         self.functions["getCoord"] = self.getCoord
         self.functions["getPose"] = self.getPose
 
@@ -19,21 +17,19 @@ class SocketMeshOps(AbstractOp):
 
     def getPose(self,conn,jsonCall):
 
-        mhapi = G.app.mhapi
-
         poseFilename = jsonCall.params.get("poseFilename") # use get, since might not be there
         
         if poseFilename is not None:
             filename, file_extension = os.path.splitext(poseFilename)
             if file_extension == ".mhpose":
-                mhapi.skeleton.setExpressionFromFile(poseFilename)
+                self.api.skeleton.setExpressionFromFile(poseFilename)
             if file_extension == ".bvh":
-                mhapi.skeleton.setPoseFromFile(poseFilename)
+                self.api.skeleton.setPoseFromFile(poseFilename)
 
         self.parent.addMessage("Constructing dict with bone matrices.")
         
         skeleton = self.human.getSkeleton()
-        skelobj = dict();
+        skelobj = dict()
 
         bones = skeleton.getBones()
         

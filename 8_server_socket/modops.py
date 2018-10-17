@@ -1,15 +1,12 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-from core import G
-
 from .abstractop import AbstractOp
 
 class SocketModifierOps(AbstractOp):
 
     def __init__(self, sockettaskview):
         super().__init__(sockettaskview)
-        self.api = G.app.mhapi
         self.functions["applyModifier"] = self.applyModifier
         self.functions["getAppliedTargets"] = self.getAppliedTargets
         self.functions["getAvailableModifierNames"] = self.getAvailableModifierNames
