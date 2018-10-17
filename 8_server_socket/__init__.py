@@ -94,9 +94,8 @@ class SocketTaskView(gui3d.TaskView):
             jsonCall = data
             jsonCall.error = "Unknown command"
 
-        self.addMessage("About to serialize JSON. This might take some time.")
-
         if not jsonCall.responseIsBinary:
+            self.addMessage("About to serialize JSON. This might take some time.")
             response = jsonCall.serialize()
             print("About to send:\n\n" + response)
             response = bytes(response, encoding='utf-8')
