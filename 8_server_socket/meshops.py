@@ -45,6 +45,12 @@ class SocketMeshOps(AbstractOp):
         jsonCall.data["facesTypeCode"] = faces.dtype.str
         jsonCall.data["facesBytesWhenPacked"] = faces.itemsize * faces.size
 
+        faceGroupNames = []
+
+        for fg in mesh.faceGroups:
+            faceGroupNames.append(fg.name)
+
+        jsonCall.data["faceGroups"] = self.api.mesh.getFaceGroupFaceIndexes()
 
     def getPose(self,conn,jsonCall):
 
