@@ -35,12 +35,12 @@ class SocketMeshOps(AbstractOp):
             coord = p.object.mesh.coord
             shape = coord.shape
             info["numVertices"] = shape[0]
-            info["verticesTypeCode"] = coord.dtype.str
+            info["verticesTypeCode"] = self.api.internals.numpyTypecodeToPythonTypeCode(coord.dtype.str)
             info["verticesBytesWhenPacked"] = coord.itemsize * coord.size
             faces = p.object.mesh.fvert
             shape = faces.shape
             info["numFaces"] = shape[0]
-            info["facesTypeCode"] = faces.dtype.str
+            info["facesTypeCode"] = self.api.internals.numpyTypecodeToPythonTypeCode(faces.dtype.str)
             info["facesBytesWhenPacked"] = faces.itemsize * faces.size
             objects.append(info)
         jsonCall.data = objects
@@ -57,14 +57,14 @@ class SocketMeshOps(AbstractOp):
         coord = mesh.coord
         shape = coord.shape
         jsonCall.data["numVertices"] = shape[0]
-        jsonCall.data["verticesTypeCode"] = coord.dtype.str
+        jsonCall.data["verticesTypeCode"] = self.api.internals.numpyTypecodeToPythonTypeCode(coord.dtype.str)
         jsonCall.data["verticesBytesWhenPacked"] = coord.itemsize * coord.size
 
         faces = mesh.fvert
         shape = faces.shape
 
         jsonCall.data["numFaces"] = shape[0]
-        jsonCall.data["facesTypeCode"] = faces.dtype.str
+        jsonCall.data["facesTypeCode"] = self.api.internals.numpyTypecodeToPythonTypeCode(faces.dtype.str)
         jsonCall.data["facesBytesWhenPacked"] = faces.itemsize * faces.size
 
         faceGroupNames = []
