@@ -14,6 +14,7 @@ class SocketMeshOps(AbstractOp):
         self.functions["getBodyVerticesBinary"] = self.getBodyVerticesBinary
         self.functions["getCoord"] = self.getCoord
         self.functions["getPose"] = self.getPose
+        self.functions["getProxyInfo"] = self.getProxyInfo
 
     def getCoord(self,conn,jsonCall):
         jsonCall.data = self.human.mesh.coord
@@ -22,6 +23,27 @@ class SocketMeshOps(AbstractOp):
         jsonCall.responseIsBinary = True
         coord = self.human.mesh.coord
         jsonCall.data = coord.tobytes()
+
+    def getProxyInfo(self,conn,jsonCall):
+        objects = []
+        for p in self.api.mesh.getAllProxies():
+            print(p)
+            info = {}
+            info["type"] = p.type
+            info["uuid"] = p.uuid
+            info["name"] = p.name
+            coord = p.object.mesh.coord
+            shape = coord.shape
+            info["numVertices"] = shape[0]
+            info["verticesTypeCode"] = coord.dtype.str
+            info["verticesBytesWhenPacked"] = coord.itemsize * coord.size
+            faces = p.object.mesh.fvert
+            shape = faces.shape
+            info["numFaces"] = shape[0]
+            info["facesTypeCode"] = faces.dtype.str
+            info["facesBytesWhenPacked"] = faces.itemsize * faces.size
+            objects.append(info)
+        jsonCall.data = objects
 
     def getBodyFacesBinary(self,conn,jsonCall):
         jsonCall.responseIsBinary = True
@@ -51,6 +73,8 @@ class SocketMeshOps(AbstractOp):
             faceGroupNames.append(fg.name)
 
         jsonCall.data["faceGroups"] = self.api.mesh.getFaceGroupFaceIndexes()
+
+
 
     def getPose(self,conn,jsonCall):
 
