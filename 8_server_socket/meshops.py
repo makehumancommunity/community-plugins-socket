@@ -16,6 +16,8 @@ class SocketMeshOps(AbstractOp):
         self.functions["getCoord"] = self.getCoord
         self.functions["getPose"] = self.getPose
         self.functions["getProxyInfo"] = self.getProxyInfo
+        self.functions["getBodyTextureCoordsBinary"] = self.getBodyTextureCoordsBinary
+        self.functions["getBodyFaceUVMappingsBinary"] = self.getBodyFaceUVMappingsBinary
 
     def getCoord(self,conn,jsonCall):
         jsonCall.data = self.human.mesh.coord
@@ -55,6 +57,16 @@ class SocketMeshOps(AbstractOp):
         material = self.human._material
         jsonCall.data = self.api.assets.materialToHash(material)
 
+    def getBodyTextureCoordsBinary(self,conn,jsonCall):
+        jsonCall.responseIsBinary = True
+        texco = self.human.mesh.texco
+        jsonCall.data = texco.tobytes()
+
+    def getBodyFaceUVMappingsBinary(self,conn,jsonCall):
+        jsonCall.responseIsBinary = True
+        faces = self.human.mesh.fuvs
+        jsonCall.data = faces.tobytes()
+
     def getBodyMeshInfo(self,conn,jsonCall):
         jsonCall.data = {}
 
@@ -79,6 +91,17 @@ class SocketMeshOps(AbstractOp):
 
         jsonCall.data["faceGroups"] = self.api.mesh.getFaceGroupFaceIndexes()
 
+        coord = mesh.texco
+        shape = coord.shape
+        jsonCall.data["numTextureCoords"] = shape[0]
+        jsonCall.data["textureCoordsTypeCode"] = self.api.internals.numpyTypecodeToPythonTypeCode(coord.dtype.str)
+        jsonCall.data["textureCoordsBytesWhenPacked"] = coord.itemsize * coord.size
+
+        fuvs = mesh.fuvs
+        shape = fuvs.shape
+        jsonCall.data["numFaceUVMappings"] = shape[0]
+        jsonCall.data["faceUVMappingsTypeCode"] = self.api.internals.numpyTypecodeToPythonTypeCode(fuvs.dtype.str)
+        jsonCall.data["faceUVMappingsBytesWhenPacked"] = fuvs.itemsize * fuvs.size
 
 
     def getPose(self,conn,jsonCall):
