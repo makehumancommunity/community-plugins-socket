@@ -13,11 +13,19 @@ class SocketMeshOps(AbstractOp):
         self.functions["getBodyMaterialInfo"] = self.getBodyMaterialInfo
         self.functions["getBodyMeshInfo"] = self.getBodyMeshInfo
         self.functions["getBodyVerticesBinary"] = self.getBodyVerticesBinary
-        self.functions["getCoord"] = self.getCoord
-        self.functions["getPose"] = self.getPose
-        self.functions["getProxyInfo"] = self.getProxyInfo
         self.functions["getBodyTextureCoordsBinary"] = self.getBodyTextureCoordsBinary
         self.functions["getBodyFaceUVMappingsBinary"] = self.getBodyFaceUVMappingsBinary
+
+        self.functions["getCoord"] = self.getCoord
+        self.functions["getPose"] = self.getPose
+        self.functions["getProxiesInfo"] = self.getProxiesInfo
+        
+        self.functions["getProxyFacesBinary"] = self.getProxyFacesBinary
+        self.functions["getProxyMaterialInfo"] = self.getProxyMaterialInfo
+        self.functions["getProxyVerticesBinary"] = self.getProxyVerticesBinary
+        self.functions["getProxyTextureCoordsBinary"] = self.getProxyTextureCoordsBinary
+        self.functions["getProxyFaceUVMappingsBinary"] = self.getProxyFaceUVMappingsBinary
+
 
     def getCoord(self,conn,jsonCall):
         jsonCall.data = self.human.mesh.coord
@@ -27,9 +35,15 @@ class SocketMeshOps(AbstractOp):
         coord = self.human.mesh.coord
         jsonCall.data = coord.tobytes()
 
-    def getProxyInfo(self,conn,jsonCall):
+    def _getProxyByUUID(self,strUuid):
+        for p in self.api.mesh.getAllProxies(includeBodyProxy=True):
+            if p.uuid == strUuid:
+                return p
+        return None
+
+    def getProxiesInfo(self,conn,jsonCall):
         objects = []
-        for p in self.api.mesh.getAllProxies():
+        for p in self.api.mesh.getAllProxies(includeBodyProxy=True):
             print(p)
             info = {}
             info["type"] = p.type
@@ -46,6 +60,17 @@ class SocketMeshOps(AbstractOp):
             info["facesTypeCode"] = self.api.internals.numpyTypecodeToPythonTypeCode(faces.dtype.str)
             info["facesBytesWhenPacked"] = faces.itemsize * faces.size
             objects.append(info)
+            coord = p.object.mesh.texco
+            shape = coord.shape
+            info["numTextureCoords"] = shape[0]
+            info["textureCoordsTypeCode"] = self.api.internals.numpyTypecodeToPythonTypeCode(coord.dtype.str)
+            info["textureCoordsBytesWhenPacked"] = coord.itemsize * coord.size
+            fuvs = p.object.mesh.fuvs
+            shape = fuvs.shape
+            info["numFaceUVMappings"] = shape[0]
+            info["faceUVMappingsTypeCode"] = self.api.internals.numpyTypecodeToPythonTypeCode(fuvs.dtype.str)
+            info["faceUVMappingsBytesWhenPacked"] = fuvs.itemsize * fuvs.size
+
         jsonCall.data = objects
 
     def getBodyFacesBinary(self,conn,jsonCall):
@@ -130,3 +155,37 @@ class SocketMeshOps(AbstractOp):
 
         jsonCall.data = skelobj
 
+    def getProxyVerticesBinary(self,conn,jsonCall):
+        uuid = jsonCall.params["uuid"]
+        proxy = self._getProxyByUUID(uuid)
+        jsonCall.responseIsBinary = True
+        coord = proxy.object.mesh.coord
+        print(len(proxy.object.mesh.coord))
+        jsonCall.data = coord.tobytes()
+
+    def getProxyFacesBinary(self,conn,jsonCall):
+        uuid = jsonCall.params["uuid"]
+        proxy = self._getProxyByUUID(uuid)
+        jsonCall.responseIsBinary = True
+        faces = proxy.object.mesh.fvert
+        jsonCall.data = faces.tobytes()
+
+    def getProxyMaterialInfo(self,conn,jsonCall):
+        uuid = jsonCall.params["uuid"]
+        proxy = self._getProxyByUUID(uuid)
+        material = proxy.material
+        jsonCall.data = self.api.assets.materialToHash(material)
+
+    def getProxyTextureCoordsBinary(self,conn,jsonCall):
+        uuid = jsonCall.params["uuid"]
+        proxy = self._getProxyByUUID(uuid)
+        jsonCall.responseIsBinary = True
+        texco = proxy.object.mesh.texco
+        jsonCall.data = texco.tobytes()
+
+    def getProxyFaceUVMappingsBinary(self,conn,jsonCall):
+        uuid = jsonCall.params["uuid"]
+        proxy = self._getProxyByUUID(uuid)
+        jsonCall.responseIsBinary = True
+        faces = proxy.object.mesh.fuvs
+        jsonCall.data = faces.tobytes()
