@@ -9,6 +9,12 @@ class SocketMeshOps(AbstractOp):
 
     def __init__(self, sockettaskview):
         super().__init__(sockettaskview)
+
+        # Sync operations
+        self.functions["getCoord"] = self.getCoord
+        self.functions["getPose"] = self.getPose
+
+        # Import body operations
         self.functions["getBodyFacesBinary"] = self.getBodyFacesBinary
         self.functions["getBodyMaterialInfo"] = self.getBodyMaterialInfo
         self.functions["getBodyMeshInfo"] = self.getBodyMeshInfo
@@ -16,10 +22,8 @@ class SocketMeshOps(AbstractOp):
         self.functions["getBodyTextureCoordsBinary"] = self.getBodyTextureCoordsBinary
         self.functions["getBodyFaceUVMappingsBinary"] = self.getBodyFaceUVMappingsBinary
 
-        self.functions["getCoord"] = self.getCoord
-        self.functions["getPose"] = self.getPose
+        # Import proxy operations
         self.functions["getProxiesInfo"] = self.getProxiesInfo
-        
         self.functions["getProxyFacesBinary"] = self.getProxyFacesBinary
         self.functions["getProxyMaterialInfo"] = self.getProxyMaterialInfo
         self.functions["getProxyVerticesBinary"] = self.getProxyVerticesBinary
