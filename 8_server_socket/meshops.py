@@ -2,8 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import os
+import pprint
+import math
+import numpy as np
 
 from .abstractop import AbstractOp
+
+pp = pprint.PrettyPrinter(indent=4)
 
 class SocketMeshOps(AbstractOp):
 
@@ -30,6 +35,8 @@ class SocketMeshOps(AbstractOp):
         self.functions["getProxyTextureCoordsBinary"] = self.getProxyTextureCoordsBinary
         self.functions["getProxyFaceUVMappingsBinary"] = self.getProxyFaceUVMappingsBinary
 
+        # Import skeleton operations
+        self.functions["getSkeleton"] = self.getSkeleton
 
     def getCoord(self,conn,jsonCall):
         jsonCall.data = self.human.mesh.coord
@@ -132,6 +139,63 @@ class SocketMeshOps(AbstractOp):
         jsonCall.data["faceUVMappingsTypeCode"] = self.api.internals.numpyTypecodeToPythonTypeCode(fuvs.dtype.str)
         jsonCall.data["faceUVMappingsBytesWhenPacked"] = fuvs.itemsize * fuvs.size
 
+    def _boneToHash(self, boneHierarchy, bone, recursionLevel=1):
+        out = {}
+        out["name"] = bone.name
+        out["headPos"] = bone.headPos
+        out["tailPos"] = bone.tailPos
+
+        # from MHX2 exporter:
+
+        rmat = bone.matRestGlobal
+        from transformations import quaternion_from_matrix
+        mat = np.array((rmat[0], -rmat[2], rmat[1], rmat[3]))
+        qw, qx, qy, qz = quaternion_from_matrix(mat)
+        if qw < 1e-4:
+            roll = 0
+        else:
+            roll = math.pi - 2 * math.atan2(qy, qw);
+        if roll < -math.pi:
+            roll += 2 * math.pi
+        elif roll > math.pi:
+            roll -= 2 * math.pi
+
+        out["matrix"] = [list(rmat[0,:]), list(rmat[1,:]), list(rmat[2,:]), list(rmat[3,:])]
+        out["roll"] = roll
+
+        out["children"] = []
+        boneHierarchy.append(out)
+
+        # Just a security measure.
+        if recursionLevel < 30:
+            for child in bone.children:
+                self._boneToHash(out["children"], child, recursionLevel+1)
+
+    def getSkeleton(self, conn, jsonCall):
+
+        out = {}
+        skeleton = self.human.getSkeleton()
+
+        boneHierarchy = []
+
+        yOffset = -1 * self.human.getJointPosition('ground')[1]
+        out["offset"] = [0.0, 0.0, yOffset]
+
+        if not skeleton is None:
+            out["name"] = skeleton.name
+            for bone in skeleton.roots:
+                self._boneToHash(boneHierarchy, bone)
+        else:
+            out["name"] = "none"
+
+        out["bones"] = boneHierarchy
+
+        #pp.pprint(out)
+        #rawWeights = self.human.getVertexWeights(skeleton)
+        #print("-- rawWeights --")
+        #pp.pprint(rawWeights.data["spine05"])
+
+        jsonCall.data = out
 
     def getPose(self,conn,jsonCall):
 
