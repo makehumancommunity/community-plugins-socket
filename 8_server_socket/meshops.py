@@ -7,6 +7,7 @@ import math
 import numpy as np
 
 from .abstractop import AbstractOp
+from core import G
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -105,6 +106,14 @@ class SocketMeshOps(AbstractOp):
 
     def getBodyMeshInfo(self,conn,jsonCall):
         jsonCall.data = {}
+
+        name = "untitled"
+
+        if not G.app.currentFile is None:
+            if not G.app.currentFile.title is None:
+                name = G.app.currentFile.title
+
+        jsonCall.data["name"] = name
 
         mesh = self.human.mesh
         coord = mesh.coord
