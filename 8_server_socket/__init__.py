@@ -97,7 +97,7 @@ class SocketTaskView(gui3d.TaskView):
         if not jsonCall.responseIsBinary:
             self.addMessage("About to serialize JSON. This might take some time.")
             response = jsonCall.serialize()
-            print("About to send:\n\n" + response)
+            #print("About to send:\n\n" + response)
             response = bytes(response, encoding='utf-8')
         else:
             response = jsonCall.data
