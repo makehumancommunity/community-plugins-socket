@@ -250,7 +250,7 @@ class SocketMeshOps(AbstractOp):
     def getProxyMaterialInfo(self,conn,jsonCall):
         uuid = jsonCall.params["uuid"]
         proxy = self._getProxyByUUID(uuid)
-        material = proxy.material
+        material = proxy.object.material
         jsonCall.data = self.api.assets.materialToHash(material)
 
     def getProxyTextureCoordsBinary(self,conn,jsonCall):
