@@ -27,6 +27,7 @@ class SocketMeshOps(AbstractOp):
         self.functions["getBodyVerticesBinary"] = self.getBodyVerticesBinary
         self.functions["getBodyTextureCoordsBinary"] = self.getBodyTextureCoordsBinary
         self.functions["getBodyFaceUVMappingsBinary"] = self.getBodyFaceUVMappingsBinary
+        self.functions["getBodyWeightInfo"] = self.getBodyWeightInfo
 
         # Import proxy operations
         self.functions["getProxiesInfo"] = self.getProxiesInfo
@@ -44,7 +45,7 @@ class SocketMeshOps(AbstractOp):
 
     def getBodyVerticesBinary(self,conn,jsonCall):
         jsonCall.responseIsBinary = True
-        coord = self.human.mesh.coord
+        coord = self._getBodyMesh().coord
         jsonCall.data = coord.tobytes()
 
     def _getProxyByUUID(self,strUuid):
@@ -55,8 +56,13 @@ class SocketMeshOps(AbstractOp):
 
     def getProxiesInfo(self,conn,jsonCall):
         objects = []
-        for p in self.api.mesh.getAllProxies(includeBodyProxy=True):
-            print(p)
+
+        allProxies =self.api.mesh.getAllProxies(includeBodyProxy=False)
+
+        if not self.human.proxy is None and not self.human.proxy.name is None:
+            allProxies.append(self.human.proxy)
+
+        for p in allProxies:
             info = {}
             info["type"] = p.type
             info["uuid"] = p.uuid
@@ -87,7 +93,7 @@ class SocketMeshOps(AbstractOp):
 
     def getBodyFacesBinary(self,conn,jsonCall):
         jsonCall.responseIsBinary = True
-        faces = self.human.mesh.fvert
+        faces = self._getBodyMesh().fvert
         jsonCall.data = faces.tobytes()
 
     def getBodyMaterialInfo(self,conn,jsonCall):
@@ -96,13 +102,16 @@ class SocketMeshOps(AbstractOp):
 
     def getBodyTextureCoordsBinary(self,conn,jsonCall):
         jsonCall.responseIsBinary = True
-        texco = self.human.mesh.texco
+        texco = self._getBodyMesh().texco
         jsonCall.data = texco.tobytes()
 
     def getBodyFaceUVMappingsBinary(self,conn,jsonCall):
         jsonCall.responseIsBinary = True
-        faces = self.human.mesh.fuvs
+        faces = self._getBodyMesh().fuvs
         jsonCall.data = faces.tobytes()
+
+    def _getBodyMesh(self):
+        return self.human._Object__seedMesh
 
     def getBodyMeshInfo(self,conn,jsonCall):
         jsonCall.data = {}
@@ -115,7 +124,8 @@ class SocketMeshOps(AbstractOp):
 
         jsonCall.data["name"] = name
 
-        mesh = self.human.mesh
+        mesh = self._getBodyMesh()
+
         coord = mesh.coord
         shape = coord.shape
         jsonCall.data["numVertices"] = shape[0]
@@ -198,13 +208,28 @@ class SocketMeshOps(AbstractOp):
             out["name"] = "none"
 
         out["bones"] = boneHierarchy
+        jsonCall.data = out
 
-        #pp.pprint(out)
-        #rawWeights = self.human.getVertexWeights(skeleton)
-        #print("-- rawWeights --")
-        #pp.pprint(rawWeights.data["spine05"])
+    def getBodyWeightInfo(self, conn, jsonCall):
+
+        out = []
+        skeleton = self.human.getSkeleton()
+        rawWeights = self.human.getVertexWeights(skeleton)
+
+        for key in rawWeights.data.keys():
+            bw = {}
+            bw["bone"] = key
+            bw["numVertices"] = len(rawWeights.data[key][0])
+
+            verts = rawWeights.data[key][0]
+            weights = rawWeights.data[key][1]
+
+            bw["vertListBytesWhenPacked"] = verts.itemsize * verts.size
+            bw["weightsBytesWhenPacked"] = weights.itemsize * weights.size
+            out.append(bw)
 
         jsonCall.data = out
+
 
     def getPose(self,conn,jsonCall):
 
@@ -228,41 +253,47 @@ class SocketMeshOps(AbstractOp):
             rmat = bone.getRestMatrix('zUpFaceNegY')
             skelobj[bone.name] = [ list(rmat[0,:]), list(rmat[1,:]), list(rmat[2,:]), list(rmat[3,:]) ]
 
-        print(skelobj)
-
         jsonCall.data = skelobj
+
+    def _getProxyMesh(self, proxy):
+        if proxy.type == "Proxymeshes":
+            if not self.human.proxy is None and not self.human.proxy.name is None:
+                return self.human.mesh
+        return proxy.object.mesh
 
     def getProxyVerticesBinary(self,conn,jsonCall):
         uuid = jsonCall.params["uuid"]
         proxy = self._getProxyByUUID(uuid)
         jsonCall.responseIsBinary = True
-        coord = proxy.object.mesh.coord
-        print(len(proxy.object.mesh.coord))
+        coord = self._getProxyMesh(proxy).coord
         jsonCall.data = coord.tobytes()
 
     def getProxyFacesBinary(self,conn,jsonCall):
         uuid = jsonCall.params["uuid"]
         proxy = self._getProxyByUUID(uuid)
         jsonCall.responseIsBinary = True
-        faces = proxy.object.mesh.fvert
+        faces = self._getProxyMesh(proxy).fvert
         jsonCall.data = faces.tobytes()
 
     def getProxyMaterialInfo(self,conn,jsonCall):
         uuid = jsonCall.params["uuid"]
         proxy = self._getProxyByUUID(uuid)
-        material = proxy.object.material
+        if proxy.type == "Proxymeshes":
+            material = self.human._material
+        else:
+            material = proxy.object.material
         jsonCall.data = self.api.assets.materialToHash(material)
 
     def getProxyTextureCoordsBinary(self,conn,jsonCall):
         uuid = jsonCall.params["uuid"]
         proxy = self._getProxyByUUID(uuid)
         jsonCall.responseIsBinary = True
-        texco = proxy.object.mesh.texco
+        texco = self._getProxyMesh(proxy).texco
         jsonCall.data = texco.tobytes()
 
     def getProxyFaceUVMappingsBinary(self,conn,jsonCall):
         uuid = jsonCall.params["uuid"]
         proxy = self._getProxyByUUID(uuid)
         jsonCall.responseIsBinary = True
-        faces = proxy.object.mesh.fuvs
+        faces = self._getProxyMesh(proxy).fuvs
         jsonCall.data = faces.tobytes()
