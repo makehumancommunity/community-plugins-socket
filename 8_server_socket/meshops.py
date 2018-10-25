@@ -28,6 +28,8 @@ class SocketMeshOps(AbstractOp):
         self.functions["getBodyTextureCoordsBinary"] = self.getBodyTextureCoordsBinary
         self.functions["getBodyFaceUVMappingsBinary"] = self.getBodyFaceUVMappingsBinary
         self.functions["getBodyWeightInfo"] = self.getBodyWeightInfo
+        self.functions["getBodyWeightsVertList"] = self.getBodyWeightsVertList
+        self.functions["getBodyWeights"] = self.getBodyWeights
 
         # Import proxy operations
         self.functions["getProxiesInfo"] = self.getProxiesInfo
@@ -212,11 +214,20 @@ class SocketMeshOps(AbstractOp):
 
     def getBodyWeightInfo(self, conn, jsonCall):
 
-        out = []
+        out = {}
+        weightList = []
+
         skeleton = self.human.getSkeleton()
         rawWeights = self.human.getVertexWeights(skeleton)
 
-        for key in rawWeights.data.keys():
+        sumVerts = 0
+        sumVertListBytes = 0
+        sumWeightsBytes = 0
+
+        boneKeys = list(rawWeights.data.keys())
+        boneKeys.sort()
+
+        for key in boneKeys:
             bw = {}
             bw["bone"] = key
             bw["numVertices"] = len(rawWeights.data[key][0])
@@ -226,10 +237,58 @@ class SocketMeshOps(AbstractOp):
 
             bw["vertListBytesWhenPacked"] = verts.itemsize * verts.size
             bw["weightsBytesWhenPacked"] = weights.itemsize * weights.size
-            out.append(bw)
+            weightList.append(bw)
+
+            sumVerts = sumVerts + bw["numVertices"]
+            sumVertListBytes = sumVertListBytes + bw["vertListBytesWhenPacked"]
+            sumWeightsBytes = sumWeightsBytes + bw["weightsBytesWhenPacked"]
+
+        out["sumVerts"] = sumVerts
+        out["sumVertListBytes"] = sumVertListBytes
+        out["sumWeightsBytes"] = sumWeightsBytes
+        out["weights"] = weightList
 
         jsonCall.data = out
 
+    def getBodyWeightsVertList(self, conn, jsonCall):
+        jsonCall.responseIsBinary = True
+
+        skeleton = self.human.getSkeleton()
+        rawWeights = self.human.getVertexWeights(skeleton)
+
+        allVerts = None
+
+        boneKeys = list(rawWeights.data.keys())
+        boneKeys.sort()
+
+        for key in boneKeys:
+
+            if allVerts is None:
+                allVerts = rawWeights.data[key][0]
+            else:
+                allVerts = np.append(allVerts, rawWeights.data[key][0])
+
+        jsonCall.data = allVerts.tobytes()
+
+    def getBodyWeights(self, conn, jsonCall):
+        jsonCall.responseIsBinary = True
+
+        skeleton = self.human.getSkeleton()
+        rawWeights = self.human.getVertexWeights(skeleton)
+
+        allVerts = None
+
+        boneKeys = list(rawWeights.data.keys())
+        boneKeys.sort()
+
+        for key in boneKeys:
+
+            if allVerts is None:
+                allVerts = rawWeights.data[key][1]
+            else:
+                allVerts = np.append(allVerts, rawWeights.data[key][1])
+
+        jsonCall.data = allVerts.tobytes()
 
     def getPose(self,conn,jsonCall):
 
