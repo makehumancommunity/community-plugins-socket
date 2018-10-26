@@ -6,6 +6,7 @@ import pprint
 import math
 import numpy as np
 
+from transformations import quaternion_from_matrix
 from .abstractop import AbstractOp
 from core import G
 
@@ -38,6 +39,10 @@ class SocketMeshOps(AbstractOp):
         self.functions["getProxyVerticesBinary"] = self.getProxyVerticesBinary
         self.functions["getProxyTextureCoordsBinary"] = self.getProxyTextureCoordsBinary
         self.functions["getProxyFaceUVMappingsBinary"] = self.getProxyFaceUVMappingsBinary
+        self.functions["getProxyWeightInfo"] = self.getProxyWeightInfo
+        self.functions["getProxyWeightsVertList"] = self.getProxyWeightsVertList
+        self.functions["getProxyWeights"] = self.getProxyWeights
+
 
         # Import skeleton operations
         self.functions["getSkeleton"] = self.getSkeleton
@@ -66,6 +71,14 @@ class SocketMeshOps(AbstractOp):
 
         for p in allProxies:
             info = {}
+
+            face_mask = []
+
+            # TODO: Figure out how to find hidden faces on clothes
+            if p.type == "Proxymeshes":
+                face_mask = self._boolsToRunLenghtIdx(self.human.mesh.face_mask)
+
+            info["faceMask"] = face_mask
             info["type"] = p.type
             info["uuid"] = p.uuid
             info["name"] = p.name
@@ -115,6 +128,25 @@ class SocketMeshOps(AbstractOp):
     def _getBodyMesh(self):
         return self.human._Object__seedMesh
 
+    def _boolsToRunLenghtIdx(self, boolArray):
+        print(boolArray)
+        out = []
+        i = 0;
+        needNewRun = True
+
+        while i < len(boolArray):
+            if boolArray[i]:
+                if needNewRun:
+                    out.append([i,i])
+                    needNewRun = False
+                out[ len(out) - 1 ][1] = i
+            else:
+                needNewRun = True
+            i = i + 1
+
+        return out
+
+
     def getBodyMeshInfo(self,conn,jsonCall):
         jsonCall.data = {}
 
@@ -127,6 +159,12 @@ class SocketMeshOps(AbstractOp):
         jsonCall.data["name"] = name
 
         mesh = self._getBodyMesh()
+
+        face_mask = []
+        if hasattr(mesh, "face_mask"):
+            face_mask = self._boolsToRunLenghtIdx(mesh.face_mask)
+
+        jsonCall.data["faceMask"] = face_mask
 
         coord = mesh.coord
         shape = coord.shape
@@ -166,12 +204,9 @@ class SocketMeshOps(AbstractOp):
         out["headPos"] = bone.headPos
         out["tailPos"] = bone.tailPos
 
-        # from MHX2 exporter:
-
-        rmat = bone.matRestGlobal
-        from transformations import quaternion_from_matrix
-        mat = np.array((rmat[0], -rmat[2], rmat[1], rmat[3]))
-        qw, qx, qy, qz = quaternion_from_matrix(mat)
+        restMatrix = bone.matRestGlobal
+        matrix = np.array((restMatrix[0], -restMatrix[2], restMatrix[1], restMatrix[3]))
+        qw, qx, qy, qz = quaternion_from_matrix(matrix)
         if qw < 1e-4:
             roll = 0
         else:
@@ -181,7 +216,7 @@ class SocketMeshOps(AbstractOp):
         elif roll > math.pi:
             roll -= 2 * math.pi
 
-        out["matrix"] = [list(rmat[0,:]), list(rmat[1,:]), list(rmat[2,:]), list(rmat[3,:])]
+        out["matrix"] = [list(restMatrix[0,:]), list(restMatrix[1,:]), list(restMatrix[2,:]), list(restMatrix[3,:])]
         out["roll"] = roll
 
         out["children"] = []
@@ -275,6 +310,99 @@ class SocketMeshOps(AbstractOp):
 
         skeleton = self.human.getSkeleton()
         rawWeights = self.human.getVertexWeights(skeleton)
+
+        allVerts = None
+
+        boneKeys = list(rawWeights.data.keys())
+        boneKeys.sort()
+
+        for key in boneKeys:
+
+            if allVerts is None:
+                allVerts = rawWeights.data[key][1]
+            else:
+                allVerts = np.append(allVerts, rawWeights.data[key][1])
+
+        jsonCall.data = allVerts.tobytes()
+
+    def getProxyWeightInfo(self, conn, jsonCall):
+
+        out = {}
+        weightList = []
+
+        uuid = jsonCall.params["uuid"]
+        proxy = self._getProxyByUUID(uuid)
+        skeleton = self.human.getSkeleton()
+
+        humanWeights = self.human.getVertexWeights(skeleton)
+        rawWeights = proxy.getVertexWeights(humanWeights, skeleton)
+
+        #pp.pprint(rawWeights)
+        #weights = mesh.getVertexWeights(pxySeedWeights)
+
+        sumVerts = 0
+        sumVertListBytes = 0
+        sumWeightsBytes = 0
+
+        boneKeys = list(rawWeights.data.keys())
+        boneKeys.sort()
+
+        for key in boneKeys:
+            bw = {}
+            bw["bone"] = key
+            bw["numVertices"] = len(rawWeights.data[key][0])
+
+            verts = rawWeights.data[key][0]
+            weights = rawWeights.data[key][1]
+
+            bw["vertListBytesWhenPacked"] = verts.itemsize * verts.size
+            bw["weightsBytesWhenPacked"] = weights.itemsize * weights.size
+            weightList.append(bw)
+
+            sumVerts = sumVerts + bw["numVertices"]
+            sumVertListBytes = sumVertListBytes + bw["vertListBytesWhenPacked"]
+            sumWeightsBytes = sumWeightsBytes + bw["weightsBytesWhenPacked"]
+
+        out["sumVerts"] = sumVerts
+        out["sumVertListBytes"] = sumVertListBytes
+        out["sumWeightsBytes"] = sumWeightsBytes
+        out["weights"] = weightList
+
+        jsonCall.data = out
+
+    def getProxyWeightsVertList(self, conn, jsonCall):
+        jsonCall.responseIsBinary = True
+
+        uuid = jsonCall.params["uuid"]
+        proxy = self._getProxyByUUID(uuid)
+        skeleton = self.human.getSkeleton()
+
+        humanWeights = self.human.getVertexWeights(skeleton)
+        rawWeights = proxy.getVertexWeights(humanWeights, skeleton)
+
+        allVerts = None
+
+        boneKeys = list(rawWeights.data.keys())
+        boneKeys.sort()
+
+        for key in boneKeys:
+
+            if allVerts is None:
+                allVerts = rawWeights.data[key][0]
+            else:
+                allVerts = np.append(allVerts, rawWeights.data[key][0])
+
+        jsonCall.data = allVerts.tobytes()
+
+    def getProxyWeights(self, conn, jsonCall):
+        jsonCall.responseIsBinary = True
+
+        uuid = jsonCall.params["uuid"]
+        proxy = self._getProxyByUUID(uuid)
+        skeleton = self.human.getSkeleton()
+
+        humanWeights = self.human.getVertexWeights(skeleton)
+        rawWeights = proxy.getVertexWeights(humanWeights, skeleton)
 
         allVerts = None
 
