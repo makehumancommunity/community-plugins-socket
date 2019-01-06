@@ -24,7 +24,7 @@ class SocketModifierOps(AbstractOp):
 
         if not modifier:
             jsonCall.setError("No such modifier")
-            return;
+            return
 
         self.api.modifiers.applyModifier(modifierName,power,True)
         jsonCall.setData("OK")

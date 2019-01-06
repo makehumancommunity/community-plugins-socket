@@ -131,7 +131,7 @@ class SocketMeshOps(AbstractOp):
     def _boolsToRunLenghtIdx(self, boolArray):
         print(boolArray)
         out = []
-        i = 0;
+        i = 0
         needNewRun = True
 
         while i < len(boolArray):
@@ -210,7 +210,7 @@ class SocketMeshOps(AbstractOp):
         if qw < 1e-4:
             roll = 0
         else:
-            roll = math.pi - 2 * math.atan2(qy, qw);
+            roll = math.pi - 2 * math.atan2(qy, qw)
         if roll < -math.pi:
             roll += 2 * math.pi
         elif roll > math.pi:
