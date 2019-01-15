@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 """ 
@@ -48,10 +48,14 @@ class SocketTaskView(gui3d.TaskView):
         gui3d.TaskView.__init__(self, category, 'Socket')
 
         self.socketConfig = {'acceptConnections': False,
+                             'advanced': False,
+                             'host': '127.0.0.1',
                              'port': 12345 }
 
         if socketConfig and isinstance(socketConfig, dict):
             self.socketConfig['acceptConnections'] = socketConfig.get('acceptConnections', False)
+            self.socketConfig['advanced'] = socketConfig.get('advanced', False)
+            self.socketConfig['host'] = socketConfig.get('host', '127.0.0.1')
             self.socketConfig['port'] = socketConfig.get('port', 12345)
 
         self.workerthread = None
@@ -60,27 +64,40 @@ class SocketTaskView(gui3d.TaskView):
 
         box = self.addLeftWidget(gui.GroupBox('Server'))
         
-        self.aToggleButton = box.addWidget(gui.CheckBox('Accept connections'))
-        self.boxLabel = box.addWidget(gui.QtWidgets.QLabel('\nPort Number [Default is 12345]:'))
+        self.accToggleButton = box.addWidget(gui.CheckBox('Accept connections'))
+        box.addWidget(gui.QtWidgets.QLabel(''))
+        self.advToggleButton = box.addWidget(gui.CheckBox('Advanced Setings'))
+        self.hostLabel = box.addWidget(gui.QtWidgets.QLabel('\nHost [Default=127.0.0.1] :'))
+        self.hostEdit = box.addWidget(gui.TextEdit(str(self.socketConfig.get('host'))))
+        self.portLabel = box.addWidget(gui.QtWidgets.QLabel('\nPort [Default=12345] :'))
         self.portEdit = box.addWidget(gui.TextEdit(str(self.socketConfig.get('port'))))
-        self.portButton = box.addWidget(gui.Button('Change Port'))
+        self.spacer = box.addWidget(gui.QtWidgets.QLabel(''))
+        self.changeAddrButton = box.addWidget(gui.Button('Change Host + Port'))
 
-        self.portEdit.textChanged.connect(self.onTextChanged)
+        self.hostEdit.textChanged.connect(self.onHostChanged)
+        self.portEdit.textChanged.connect(self.onPortChanged)
 
-        @self.aToggleButton.mhEvent
+        @self.accToggleButton.mhEvent
         def onClicked(event):
             if isPy3:
-                if self.aToggleButton.selected:
-                    self.acceptConnections = True
+                if self.accToggleButton.selected:
+                    self.socketConfig['acceptConnections'] = True
                     self.openSocket()
                 else:
-                    self.acceptConnections = False
+                    self.socketConfig['acceptConnections'] = False
                     self.closeSocket()
 
-        @self.portButton.mhEvent
+        @self.advToggleButton.mhEvent
+        def onClicked(event):
+            self.enableAdvanced(self.advToggleButton.selected)
+            self.socketConfig['advanced'] = self.advToggleButton.selected
+
+        @self.changeAddrButton.mhEvent
         def onClicked(event):
             if isPy3:
-                gui3d.app.prompt('Attention', 'The port number must be changed in Blender, too', 'OK', helpId='socketInfo')
+                gui3d.app.prompt('Attention', 'The host and port must be changed in Blender, too', 'OK',
+                                 helpId='socketInfo')
+                self.accToggleButton.setChecked(True)
                 self.closeSocket()
                 self.openSocket()
 
@@ -96,16 +113,38 @@ class SocketTaskView(gui3d.TaskView):
             self.dirops = SocketDirOps(self)
             self.meshops = SocketMeshOps(self)
             self.modops = SocketModifierOps(self)
-            if socketConfig.get('acceptConnections'):
-                self.aToggleButton.setChecked(True)
+            if self.socketConfig.get('acceptConnections'):
+                self.accToggleButton.setChecked(True)
                 self.openSocket()
+            self.enableAdvanced(self.socketConfig.get('advanced', False))
+            self.advToggleButton.setChecked(self.socketConfig.get('advanced', False))
 
-    def onTextChanged(self):
+
+    def onHostChanged(self):
+        self.socketConfig['host'] = self.hostEdit.text
+
+    def onPortChanged(self):
         text = str(self.portEdit.text)
         if text.isdigit():
             self.socketConfig['port'] = int(text)
         else:
             self.portEdit.setText(str(self.socketConfig.get('port')))
+
+    def enableAdvanced(self, state = False):
+        if state:
+            self.hostLabel.show()
+            self.hostEdit.show()
+            self.portLabel.show()
+            self.portEdit.show()
+            self.spacer.show()
+            self.changeAddrButton.show()
+        else:
+            self.hostLabel.hide()
+            self.hostEdit.hide()
+            self.portLabel.hide()
+            self.portEdit.hide()
+            self.spacer.hide()
+            self.changeAddrButton.hide()
 
     def threadMessage(self,message):
         self.addMessage(str(message))
@@ -161,17 +200,23 @@ class SocketTaskView(gui3d.TaskView):
             self.workerthread.stopListening()
         self.workerthread = None
 
+
 category = None
 taskview = None
 cfgFile = os.path.join(getpath.getPath(),'socket.cfg')
 
+
 def load(app):
     socketConfig = {}
     if os.path.isfile(cfgFile):
-        with open(cfgFile, 'r', encoding='utf-8') as f:
-            socketConfig = json.loads(f.read())
+        try:
+            with open(cfgFile, 'r', encoding='utf-8') as f:
+                socketConfig = json.loads(f.read())
+        except json.JSONDecodeError:
+            socketConfig = None
     category = app.getCategory('Community')
     taskview = category.addTask(SocketTaskView(category, socketConfig=socketConfig))
+
 
 def unload(app):
     category = app.getCategory('Community')
@@ -179,4 +224,4 @@ def unload(app):
     if taskview:
         taskview.closeSocket()
         with open(cfgFile, 'w', encoding='utf-8') as f:
-            f.writelines(json.dumps(taskview.socketConfig))
+            f.writelines(json.dumps(taskview.socketConfig, indent=4))

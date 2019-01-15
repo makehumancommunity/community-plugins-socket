@@ -56,8 +56,10 @@ class WorkerThread(QThread):
         QThread.__init__(self, parent)
         self.exiting = False
         self.log = mhapi.utility.getLogChannel("socket")
-        self.socketConfig = {'port': 12345}
+        self.socketConfig = {'host' : '127.0.0.1',
+                             'port' : 12345}
         if socketConfig and isinstance(socketConfig, dict):
+            self.socketConfig['host'] = socketConfig.get('host', '127.0.0.1')
             self.socketConfig['port'] = socketConfig.get('port', 12345)
 
     def addMessage(self,message,newLine = True):
@@ -70,12 +72,12 @@ class WorkerThread(QThread):
 
         try:
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self.socket.bind(('127.0.0.1', self.socketConfig.get('port')))
+            self.socket.bind((self.socketConfig.get('host'), self.socketConfig.get('port')))
         except socket.error as msg:
             self.addMessage('Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1] + "\n")
             return
 
-        self.addMessage("opened at port {0}\n".format(self.socketConfig.get('port')))
+        self.addMessage("Opened on host {0}\nOpened at port {1}\n".format(self.socketConfig.get('host'), self.socketConfig.get('port')))
 
         self.socket.listen(10)
 
