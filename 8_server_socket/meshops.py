@@ -169,14 +169,16 @@ class SocketMeshOps(AbstractOp):
         coord = mesh.coord
         shape = coord.shape
         jsonCall.data["numVertices"] = shape[0]
-        jsonCall.data["verticesTypeCode"] = self.api.internals.numpyTypecodeToPythonTypeCode(coord.dtype.str)
+        jsonCall.data["verticesTypeCode"] = coord.dtype.str
+        jsonCall.data["verticesShape"] = coord.shape
         jsonCall.data["verticesBytesWhenPacked"] = coord.itemsize * coord.size
 
         faces = mesh.fvert
         shape = faces.shape
 
         jsonCall.data["numFaces"] = shape[0]
-        jsonCall.data["facesTypeCode"] = self.api.internals.numpyTypecodeToPythonTypeCode(faces.dtype.str)
+        jsonCall.data["facesTypeCode"] = faces.dtype.str
+        jsonCall.data["facesShape"] = faces.shape
         jsonCall.data["facesBytesWhenPacked"] = faces.itemsize * faces.size
 
         faceGroupNames = []
@@ -189,7 +191,8 @@ class SocketMeshOps(AbstractOp):
         coord = mesh.texco
         shape = coord.shape
         jsonCall.data["numTextureCoords"] = shape[0]
-        jsonCall.data["textureCoordsTypeCode"] = self.api.internals.numpyTypecodeToPythonTypeCode(coord.dtype.str)
+        jsonCall.data["textureCoordsTypeCode"] = coord.dtype.str
+        jsonCall.data["textureCoordsShape"] = shape
         jsonCall.data["textureCoordsBytesWhenPacked"] = coord.itemsize * coord.size
 
         fuvs = mesh.fuvs
