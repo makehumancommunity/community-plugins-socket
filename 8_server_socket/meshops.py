@@ -198,7 +198,8 @@ class SocketMeshOps(AbstractOp):
         fuvs = mesh.fuvs
         shape = fuvs.shape
         jsonCall.data["numFaceUVMappings"] = shape[0]
-        jsonCall.data["faceUVMappingsTypeCode"] = self.api.internals.numpyTypecodeToPythonTypeCode(fuvs.dtype.str)
+        jsonCall.data["faceUVMappingsTypeCode"] = fuvs.dtype.str
+        jsonCall.data["faceUVMappingsShape"] = shape
         jsonCall.data["faceUVMappingsBytesWhenPacked"] = fuvs.itemsize * fuvs.size
 
     def _boneToHash(self, boneHierarchy, bone, recursionLevel=1):
