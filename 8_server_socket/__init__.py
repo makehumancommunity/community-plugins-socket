@@ -176,7 +176,7 @@ class SocketTaskView(gui3d.TaskView):
             response = bytes(response, encoding='utf-8')
         else:
             response = jsonCall.data
-            print("About to send binary response with length " + str(len(response)))
+            #print("About to send binary response with length " + str(len(response)))
 
         conn.send(response)
         conn.close()

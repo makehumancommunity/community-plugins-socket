@@ -5,6 +5,7 @@ import os
 import pprint
 import math
 import numpy as np
+import time
 
 from transformations import quaternion_from_matrix
 from .abstractop import AbstractOp
@@ -382,7 +383,11 @@ class SocketMeshOps(AbstractOp):
         skeleton = self.human.getSkeleton()
 
         humanWeights = self.human.getVertexWeights(skeleton)
+
+        start = int(round(time.time() * 1000))
         rawWeights = proxy.getVertexWeights(humanWeights, skeleton)
+        stop = int(round(time.time() * 1000))
+        print("Calculating rawWeights for " + proxy.name + " took " + str(stop - start) + " milliseconds")
 
         allVerts = None
 
@@ -406,7 +411,11 @@ class SocketMeshOps(AbstractOp):
         skeleton = self.human.getSkeleton()
 
         humanWeights = self.human.getVertexWeights(skeleton)
+
+        start = int(round(time.time() * 1000))
         rawWeights = proxy.getVertexWeights(humanWeights, skeleton)
+        stop = int(round(time.time() * 1000))
+        print("Calculating rawWeights for " + proxy.name + " took " + str(stop - start) + " milliseconds")
 
         allVerts = None
 
