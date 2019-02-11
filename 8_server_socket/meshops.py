@@ -9,6 +9,7 @@ import numpy as np
 from transformations import quaternion_from_matrix
 from .abstractop import AbstractOp
 from core import G
+from material import getSkinBlender
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -197,6 +198,11 @@ class SocketMeshOps(AbstractOp):
         jsonCall.data["numFaceUVMappings"] = shape[0]
         jsonCall.data["faceUVMappingsTypeCode"] = self.api.internals.numpyTypecodeToPythonTypeCode(fuvs.dtype.str)
         jsonCall.data["faceUVMappingsBytesWhenPacked"] = fuvs.itemsize * fuvs.size
+
+        skin = getSkinBlender()
+        skinColor = skin.getDiffuseColor()
+        jsonCall.data["skinColor"] = skinColor.asTuple() + (1.0, )
+
 
     def _boneToHash(self, boneHierarchy, bone, recursionLevel=1):
         out = {}
