@@ -340,7 +340,7 @@ class SocketMeshOps(AbstractOp):
         skeleton = self.human.getSkeleton()
 
         humanWeights = self.human.getVertexWeights(skeleton)
-        rawWeights = proxy.getVertexWeights(humanWeights, skeleton)
+        rawWeights = proxy.getVertexWeights(humanWeights, skeleton, allowCache=True)
 
         #pp.pprint(rawWeights)
         #weights = mesh.getVertexWeights(pxySeedWeights)
@@ -385,7 +385,7 @@ class SocketMeshOps(AbstractOp):
         humanWeights = self.human.getVertexWeights(skeleton)
 
         start = int(round(time.time() * 1000))
-        rawWeights = proxy.getVertexWeights(humanWeights, skeleton)
+        rawWeights = proxy.getVertexWeights(humanWeights, skeleton, allowCache=True)
         stop = int(round(time.time() * 1000))
         print("Calculating rawWeights for " + proxy.name + " took " + str(stop - start) + " milliseconds")
 
@@ -413,7 +413,7 @@ class SocketMeshOps(AbstractOp):
         humanWeights = self.human.getVertexWeights(skeleton)
 
         start = int(round(time.time() * 1000))
-        rawWeights = proxy.getVertexWeights(humanWeights, skeleton)
+        rawWeights = proxy.getVertexWeights(humanWeights, skeleton, allowCache=True)
         stop = int(round(time.time() * 1000))
         print("Calculating rawWeights for " + proxy.name + " took " + str(stop - start) + " milliseconds")
 
