@@ -131,7 +131,6 @@ class SocketMeshOps(AbstractOp):
         return self.human._Object__seedMesh
 
     def _boolsToRunLenghtIdx(self, boolArray):
-        print(boolArray)
         out = []
         i = 0
         needNewRun = True
@@ -390,10 +389,10 @@ class SocketMeshOps(AbstractOp):
 
         humanWeights = self.human.getVertexWeights(skeleton)
 
-        start = int(round(time.time() * 1000))
+        #start = int(round(time.time() * 1000))
         rawWeights = proxy.getVertexWeights(humanWeights, skeleton, allowCache=True)
-        stop = int(round(time.time() * 1000))
-        print("Calculating rawWeights for " + proxy.name + " took " + str(stop - start) + " milliseconds")
+        #stop = int(round(time.time() * 1000))
+        #print("Calculating rawWeights for " + proxy.name + " took " + str(stop - start) + " milliseconds")
 
         allVerts = None
 
@@ -418,10 +417,10 @@ class SocketMeshOps(AbstractOp):
 
         humanWeights = self.human.getVertexWeights(skeleton)
 
-        start = int(round(time.time() * 1000))
+        #start = int(round(time.time() * 1000))
         rawWeights = proxy.getVertexWeights(humanWeights, skeleton, allowCache=True)
-        stop = int(round(time.time() * 1000))
-        print("Calculating rawWeights for " + proxy.name + " took " + str(stop - start) + " milliseconds")
+        #stop = int(round(time.time() * 1000))
+        #print("Calculating rawWeights for " + proxy.name + " took " + str(stop - start) + " milliseconds")
 
         allVerts = None
 
