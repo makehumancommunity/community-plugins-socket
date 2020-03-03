@@ -65,13 +65,13 @@ class SocketTaskView(gui3d.TaskView):
         box = self.addLeftWidget(gui.GroupBox('Server'))
         
         self.accToggleButton = box.addWidget(gui.CheckBox('Accept connections'))
-        box.addWidget(gui.QtWidgets.QLabel(''))
+        box.addWidget(mhapi.gui.createLabel(''))
         self.advToggleButton = box.addWidget(gui.CheckBox('Advanced Setings'))
-        self.hostLabel = box.addWidget(gui.QtWidgets.QLabel('\nHost [Default=127.0.0.1] :'))
+        self.hostLabel = box.addWidget(mhapi.gui.createLabel('\nHost [Default=127.0.0.1] :'))
         self.hostEdit = box.addWidget(gui.TextEdit(str(self.socketConfig.get('host'))))
-        self.portLabel = box.addWidget(gui.QtWidgets.QLabel('\nPort [Default=12345] :'))
+        self.portLabel = box.addWidget(mhapi.gui.createLabel('\nPort [Default=12345] :'))
         self.portEdit = box.addWidget(gui.TextEdit(str(self.socketConfig.get('port'))))
-        self.spacer = box.addWidget(gui.QtWidgets.QLabel(''))
+        self.spacer = box.addWidget(mhapi.gui.createLabel(''))
         self.changeAddrButton = box.addWidget(gui.Button('Change Host + Port'))
 
         self.hostEdit.textChanged.connect(self.onHostChanged)
