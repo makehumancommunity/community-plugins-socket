@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman server socket plugin
 
 **Product Home Page:** TBD
@@ -17,7 +17,7 @@
 Abstract
 --------
 
-This plugin opens a TCP socket and accepts some basic commands. It 
+This plugin opens a TCP socket and accepts some basic commands. It
 does not make much sense without a corresponding client.
 
 """
@@ -63,15 +63,15 @@ class SocketTaskView(gui3d.TaskView):
         self.log = mhapi.utility.getLogChannel("socket")
 
         box = self.addLeftWidget(gui.GroupBox('Server'))
-        
+
         self.accToggleButton = box.addWidget(gui.CheckBox('Accept connections'))
-        box.addWidget(gui.QtWidgets.QLabel(''))
+        box.addWidget(mhapi.ui.createLabel(''))
         self.advToggleButton = box.addWidget(gui.CheckBox('Advanced Setings'))
-        self.hostLabel = box.addWidget(gui.QtWidgets.QLabel('\nHost [Default=127.0.0.1] :'))
+        self.hostLabel = box.addWidget(mhapi.ui.createLabel('\nHost [Default=127.0.0.1] :'))
         self.hostEdit = box.addWidget(gui.TextEdit(str(self.socketConfig.get('host'))))
-        self.portLabel = box.addWidget(gui.QtWidgets.QLabel('\nPort [Default=12345] :'))
+        self.portLabel = box.addWidget(mhapi.ui.createLabel('\nPort [Default=12345] :'))
         self.portEdit = box.addWidget(gui.TextEdit(str(self.socketConfig.get('port'))))
-        self.spacer = box.addWidget(gui.QtWidgets.QLabel(''))
+        self.spacer = box.addWidget(mhapi.ui.createLabel(''))
         self.changeAddrButton = box.addWidget(gui.Button('Change Host + Port'))
 
         self.hostEdit.textChanged.connect(self.onHostChanged)
@@ -163,7 +163,7 @@ class SocketTaskView(gui3d.TaskView):
         if self.modops.hasOp(data.function):
             ops = self.modops
 
-        if ops:                
+        if ops:
             jsonCall = ops.evaluateOp(conn,data)
         else:
             jsonCall = data
@@ -180,13 +180,13 @@ class SocketTaskView(gui3d.TaskView):
 
         conn.send(response)
         conn.close()
- 
+
     def addMessage(self,message,newLine = True):
         self.log.debug("addMessage: ", message)
         if newLine:
             message = message + "\n"
         self.scriptText.addText(message)
-        
+
     def openSocket(self):
         self.addMessage("Starting server thread.")
         self.workerthread = WorkerThread(socketConfig=self.socketConfig)
