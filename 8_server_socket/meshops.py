@@ -75,32 +75,32 @@ class SocketMeshOps(AbstractOp):
             info = {}
 
             face_mask = []
+            mesh =  p.object.getSeedMesh()
 
             # TODO: Figure out how to find hidden faces on clothes
             if p.type == "Proxymeshes":
                 face_mask = self._boolsToRunLenghtIdx(self.human.mesh.face_mask)
-
             info["faceMask"] = face_mask
             info["type"] = p.type
             info["uuid"] = p.uuid
             info["name"] = p.name
-            coord = p.object.mesh.coord
+            coord = mesh.coord
             shape = coord.shape
             info["numVertices"] = shape[0]
             info["verticesTypeCode"] = self.api.internals.numpyTypecodeToPythonTypeCode(coord.dtype.str)
             info["verticesBytesWhenPacked"] = coord.itemsize * coord.size
-            faces = p.object.mesh.fvert
+            faces = mesh.fvert
             shape = faces.shape
             info["numFaces"] = shape[0]
             info["facesTypeCode"] = self.api.internals.numpyTypecodeToPythonTypeCode(faces.dtype.str)
             info["facesBytesWhenPacked"] = faces.itemsize * faces.size
             objects.append(info)
-            coord = p.object.mesh.texco
+            coord = mesh.texco
             shape = coord.shape
             info["numTextureCoords"] = shape[0]
             info["textureCoordsTypeCode"] = self.api.internals.numpyTypecodeToPythonTypeCode(coord.dtype.str)
             info["textureCoordsBytesWhenPacked"] = coord.itemsize * coord.size
-            fuvs = p.object.mesh.fuvs
+            fuvs = mesh.fuvs
             shape = fuvs.shape
             info["numFaceUVMappings"] = shape[0]
             info["faceUVMappingsTypeCode"] = self.api.internals.numpyTypecodeToPythonTypeCode(fuvs.dtype.str)
@@ -463,8 +463,8 @@ class SocketMeshOps(AbstractOp):
     def _getProxyMesh(self, proxy):
         if proxy.type == "Proxymeshes":
             if not self.human.proxy is None and not self.human.proxy.name is None:
-                return self.human.mesh
-        return proxy.object.mesh
+                return self.human._Object__proxyMesh
+        return proxy.object.getSeedMesh()
 
     def getProxyVerticesBinary(self,conn,jsonCall):
         uuid = jsonCall.params["uuid"]
