@@ -69,6 +69,7 @@ class SocketMeshOps(AbstractOp):
         allProxies =self.api.mesh.getAllProxies(includeBodyProxy=False)
 
         if not self.human.proxy is None and not self.human.proxy.name is None:
+            # print ("Proxy appended: " + self.human.proxy.name)
             allProxies.append(self.human.proxy)
 
         for p in allProxies:
@@ -79,7 +80,7 @@ class SocketMeshOps(AbstractOp):
 
             # TODO: Figure out how to find hidden faces on clothes
             if p.type == "Proxymeshes":
-                face_mask = self._boolsToRunLenghtIdx(self.human.mesh.face_mask)
+                face_mask = self._boolsToRunLenghtIdx(mesh.face_mask)
             info["faceMask"] = face_mask
             info["type"] = p.type
             info["uuid"] = p.uuid
