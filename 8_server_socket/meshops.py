@@ -80,7 +80,8 @@ class SocketMeshOps(AbstractOp):
 
             # TODO: Figure out how to find hidden faces on clothes
             if p.type == "Proxymeshes":
-                face_mask = self._boolsToRunLenghtIdx(mesh.face_mask)
+                face_mask = self._boolsToRunLenghtIdx(self.human._Object__proxyMesh.face_mask)
+
             info["faceMask"] = face_mask
             info["type"] = p.type
             info["uuid"] = p.uuid
