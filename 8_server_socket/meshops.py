@@ -116,7 +116,10 @@ class SocketMeshOps(AbstractOp):
         jsonCall.data = faces.tobytes()
 
     def getBodyMaterialInfo(self,conn,jsonCall):
-        material = self.human._material
+        if self.human.material.name == 'XrayMaterial' and self.human._backUpMaterial:
+            material = self.human._backUpMaterial
+        else:
+            material = self.human.material
         jsonCall.data = self.api.assets.materialToHash(material)
 
     def getBodyTextureCoordsBinary(self,conn,jsonCall):
@@ -486,9 +489,15 @@ class SocketMeshOps(AbstractOp):
         uuid = jsonCall.params["uuid"]
         proxy = self._getProxyByUUID(uuid)
         if proxy.type == "Proxymeshes":
-            material = self.human._material
+            if self.human.material.name == 'XrayMaterial' and self.human._backUpMaterial:
+                material = self.human._backUpMaterial
+            else:
+                material = self.human.material
         else:
-            material = proxy.object.material
+            if self.human.material.name == 'XrayMaterial' and proxy._backUpMaterial:
+                material = proxy._backUpMaterial
+            else:
+                material = proxy.object.material
         jsonCall.data = self.api.assets.materialToHash(material)
 
     def getProxyTextureCoordsBinary(self,conn,jsonCall):
