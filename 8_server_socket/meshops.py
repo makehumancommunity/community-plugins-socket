@@ -156,13 +156,17 @@ class SocketMeshOps(AbstractOp):
     def getBodyMeshInfo(self,conn,jsonCall):
         jsonCall.data = {}
 
-        name = "untitled"
+        filename = "untitled"
 
-        if not G.app.currentFile is None:
-            if not G.app.currentFile.title is None:
-                name = G.app.currentFile.title
+        if not G.app.currentFile.title is None:
+            filename = G.app.currentFile.title
+
+        name = G.app.selectedHuman.getName()
+        if not name:
+            name = filename
 
         jsonCall.data["name"] = name
+        jsonCall.data["filename"] = filename
 
         mesh = self._getBodyMesh()
 
